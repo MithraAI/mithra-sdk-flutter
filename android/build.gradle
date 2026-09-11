@@ -1,0 +1,118 @@
+group = 'com.mithra.flutter.sdk'
+version = '1.0.0' // x-release-please-version
+
+buildscript {
+    ext.kotlin_version = '1.9.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // Published Narya native SDK artifacts.
+        maven { url = uri('https://sdk.mithra.com/maven') }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+
+// The pinned Narya Android SDK version this bridge is written against.
+ext.naryaAndroidSdkVersion = '1.4.0'
+
+android {
+    namespace = 'com.mithra.flutter.sdk'
+    compileSdk = 35
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+// `kotlin` is the top-level Kotlin Gradle Plugin extension, not a member of the
+// AGP `android` extension: nesting it inside `android` fails the Groovy DSL with
+// "Could not find method kotlin()". The example app declares it at the top level
+// too (example/android/app/build.gradle.kts).
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    implementation "com.mithra.sdk:android:${project.ext.naryaAndroidSdkVersion}"
+    // Used directly by the bridge: the SDK models properties as
+    // kotlinx.serialization JsonObject and exposes inbox state as StateFlow.
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3'
+    // RemoteInput: the text typed into a text-input notification action button
+    // travels in the intent's ClipData, which only this compat API reads back.
+    implementation 'androidx.core:core:1.16.0'
+    // The persisted write key is kept in EncryptedSharedPreferences rather than
+    // plain app preferences; the version matches the native SDK's own pin so
+    // both resolve to one artifact. See NaryaAnalyticsHolder.
+    implementation 'androidx.security:security-crypto:1.1.0'
+
+    // Unit tests cover the pure payload readers only. The real org.json is on
+    // the test classpath because the mockable android.jar only stubs it, and
+    // `unitTests.returnDefaultValues` would turn every parse into a no-op.
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}
+
+// --- Optional local-SDK development path -------------------------------------
+//
+// By default the bridge resolves com.mithra.sdk:android from
+// https://sdk.mithra.com/maven. To build against a local narya-android checkout
+// instead - which is what the Flutter demo does while both are in flight - set
+// the flag in the *consuming app's* android/gradle.properties (or in
+// ~/.gradle/gradle.properties):
+//
+//     naryaUseLocalSdk=true
+//     naryaSdkPath=../../narya-android      # optional, this is the default
+//
+// and add the matching composite build to the app's android/settings.gradle:
+//
+//     def useLocalSdk = (settings.ext.has('naryaUseLocalSdk')
+//             ? settings.ext.naryaUseLocalSdk
+//             : providers.gradleProperty('naryaUseLocalSdk').orNull) == 'true'
+//     def localSdkPath = providers.gradleProperty('naryaSdkPath')
+//             .getOrElse('../../narya-android')
+//     if (useLocalSdk && file(localSdkPath).isDirectory()) {
+//         includeBuild(localSdkPath) {
+//             dependencySubstitution {
+//                 substitute(module('com.mithra.sdk:android')).using(project(':android'))
+//                 substitute(module('com.mithra.sdk:core')).using(project(':core'))
+//                 substitute(module('com.mithra.sdk:inapp-ui')).using(project(':inapp-ui'))
+//             }
+//         }
+//     }
+//
+// The property name and substitution shape match narya-demo-android's
+// settings.gradle.kts so a single machine-wide override works for both. The
+// logging below makes the resolution visible in the build output.
+if (providers.gradleProperty('naryaUseLocalSdk').orNull == 'true') {
+    logger.lifecycle(
+            "mithra_flutter_sdk: naryaUseLocalSdk=true; expecting the consuming app's " +
+                    'settings.gradle to substitute com.mithra.sdk:* with a local checkout')
+}

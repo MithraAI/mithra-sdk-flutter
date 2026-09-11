@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      The bridge itself declares no components and requests no permissions.
+      Push delivery needs the host app to declare its own
+      FirebaseMessagingService; see the README.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

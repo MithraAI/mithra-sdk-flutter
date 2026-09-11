@@ -1,0 +1,82 @@
+# Files kept in git but excluded from the published pub.dev archive.
+#
+# IMPORTANT: .pubignore fully REPLACES .gitignore for `dart pub publish` —
+# when this file exists, .gitignore is not consulted at all. So it has to
+# repeat the build/tooling exclusions as well as the publish-only ones,
+# otherwise generated output (build/, .dart_tool/, Pods/) ends up in the
+# archive. Keep the first block in sync with .gitignore.
+
+# ── Mirrors .gitignore ───────────────────────────────────────
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+doc/api/
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.atom/
+.history/
+.DS_Store
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+**/lib/generated_plugin_registrant.dart
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/ephemeral/
+ios/Frameworks/
+ios/*.zip
+ios/.build/
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Flutter/ephemeral/
+*/ios/**/xcshareddata/swiftpm/
+example/ios/Runner.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+.gradle/
+android/.gradle/
+android/local.properties
+example/android/.gradle/
+example/android/local.properties
+local.properties
+captures/
+*.jks
+*.keystore
+coverage/
+
+# ── Publish-only exclusions ──────────────────────────────────
+# Release and CI infrastructure: of no use to a package consumer.
+.github/
+scripts/
+CODEOWNERS
+release-please-config.json
+.release-please-manifest.json
+
+# Host test harness for the bridge's pure-Swift logic: a second Package.swift
+# over the same sources, plus its tests. Development infrastructure, of no use
+# to a consumer - and excluding it also guarantees no tool can mistake
+# ios/Package.swift for the plugin's own package, which is
+# ios/mithra_flutter_sdk/Package.swift. See that file's header.
+ios/Package.swift
+ios/Tests/
+
+# Internal cross-platform API contract. Excluded because it is an internal
+# engineering document, not package documentation: it is the frozen contract
+# shared with narya-ios / narya-android and it is meaningless outside the source
+# repository. `dart pub publish` does NOT warn about it -- verified with a
+# dry-run over a snapshot that included docs/api-contract.md -- so this is a
+# deliberate scoping decision, not a packaging workaround. Any README link to a
+# file under docs/ must therefore be an absolute link to the source repository,
+# never a relative one.
+docs/

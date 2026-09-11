@@ -1,0 +1,4 @@
+// The plugin is always consumed as a subproject of a Flutter app, which owns
+// plugin management and dependency resolution. This file exists only so the
+// directory can be opened on its own in an IDE.
+rootProject.name = 'mithra_flutter_sdk'
